@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>🏆 FIFA World Cup Predictor</title>
+<style>
+
+body{
+margin:0;
+padding:20px;
+font-family:Arial;
+background:linear-gradient(135deg,#020617,#0f172a,#112244);
+color:white;
+}
+
+h1{
+text-align:center;
+font-size:50px;
+text-shadow:0 0 20px cyan;
+margin-bottom:30px;
+}
+
+#matches{
+
+display:grid;
+grid-template-columns:
+repeat(auto-fit,minmax(450px,1fr));
+
+gap:25px;
+
+}
+
+.card{
+
+background:rgba(255,255,255,.08);
+
+backdrop-filter:blur(15px);
+
+border-radius:30px;
+
+padding:25px;
+
+box-shadow:
+0 0 30px rgba(0,255,255,.2);
+
+transition:.5s;
+
+}
+
+.card:hover{
+
+transform:translateY(-10px);
+
+}
+
+.score{
+
+font-size:35px;
+
+text-align:center;
+
+color:#00ffff;
+
+margin:15px;
+
+}
+
+.voteContainer{
+
+height:40px;
+
+background:#111;
+
+border-radius:50px;
+
+overflow:hidden;
+
+position:relative;
+
+margin-top:15px;
+
+}
+
+.green{
+
+position:absolute;
+left:0;
+height:100%;
+background:lime;
+width:0%;
+transition:1s;
+
+}
+
+.red{
+
+position:absolute;
+right:0;
+height:100%;
+background:red;
+width:0%;
+transition:1s;
+
+}
+
+.percent{
+
+position:absolute;
+width:100%;
+text-align:center;
+line-height:40px;
+font-weight:bold;
+
+}
+
+button{
+
+padding:10px 18px;
+border:none;
+border-radius:20px;
+cursor:pointer;
+margin:10px;
+
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🏆 FIFA World Cup Predictor</h1>
+
+<div id="matches"></div>
+
+<script>
+
+const matches=[
+
+{
+id:"m1",
+team1:"🇨🇼 Curacao",
+team2:"🇨🇮 Ivory Coast",
+time:"25 Jun | 1:00 AM PKT"
+},
+
+{
+id:"m2",
+team1:"🇪🇨 Ecuador",
+team2:"🇩🇪 Germany",
+time:"25 Jun | 1:00 AM PKT"
+},
+
+{
+id:"m3",
+team1:"🇹🇳 Tunisia",
+team2:"🇳🇱 Netherlands",
+time:"25 Jun | 4:00 AM PKT"
+},
+
+{
+id:"m4",
+team1:"🇯🇵 Japan",
+team2:"🇸🇪 Sweden",
+time:"25 Jun | 4:00 AM PKT"
+},
+
+{
+id:"m5",
+team1:"🇹🇷 Türkiye",
+team2:"🇺🇸 USA",
+time:"25 Jun | 7:00 AM PKT"
+},
+
+{
+id:"m6",
+team1:"🇵🇾 Paraguay",
+team2:"🇦🇺 Australia",
+time:"25 Jun | 7:00 AM PKT"
+},
+
+{
+id:"m7",
+team1:"🇳🇴 Norway",
+team2:"🇫🇷 France",
+time:"27 Jun | 12:00 AM PKT"
+},
+
+{
+id:"m8",
+team1:"🇸🇳 Senegal",
+team2:"🇮🇶 Iraq",
+time:"27 Jun | 12:00 AM PKT"
+},
+
+{
+id:"m9",
+team1:"🇺🇾 Uruguay",
+team2:"🇪🇸 Spain",
+time:"27 Jun | 5:00 AM PKT"
+},
+
+{
+id:"m10",
+team1:"🇳🇿 New Zealand",
+team2:"🇧🇪 Belgium",
+time:"27 Jun | 8:00 AM PKT"
+},
+
+{
+id:"m11",
+team1:"🇵🇦 Panama",
+team2:"🏴 England",
+time:"28 Jun | 2:00 AM PKT"
+},
+
+{
+id:"m12",
+team1:"🇨🇴 Colombia",
+team2:"🇵🇹 Portugal",
+time:"28 Jun | 4:30 AM PKT"
+},
+
+{
+id:"m13",
+team1:"🇩🇿 Algeria",
+team2:"🇦🇹 Austria",
+time:"28 Jun | 7:00 AM PKT"
+},
+
+{
+id:"m14",
+team1:"🇯🇴 Jordan",
+team2:"🇦🇷 Argentina",
+time:"28 Jun | 7:00 AM PKT"
+}
+
+];
+
+const c=document.getElementById(
+"matches"
+);
+
+matches.forEach(m=>{
+
+c.innerHTML+=`
+
+<div class="card">
+
+<h2>
+${m.team1}
+VS
+${m.team2}
+</h2>
+
+<p>
+🕒 ${m.time}
+</p>
+
+<div class="score">
+
+0 - 0
+
+</div>
+
+<button onclick=
+"vote('${m.id}','l')">
+
+${m.team1}
+
+</button>
+
+<button onclick=
+"vote('${m.id}','r')">
+
+${m.team2}
+
+</button>
+
+<div class="voteContainer">
+
+<div
+id="${m.id}g"
+class="green">
+</div>
+
+<div
+id="${m.id}r"
+class="red">
+</div>
+
+<div
+id="${m.id}t"
+class="percent">
+
+0% ⚔ 0%
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+load(m.id);
+
+});
+
+function vote(id,side){
+
+if(
+localStorage.getItem(
+"v"+id
+)
+){
+
+alert(
+"Already voted!"
+);
+
+return;
+
+}
+
+let d=
+JSON.parse(
+localStorage.getItem(id)
+)
+||
+{
+l:0,
+r:0
+};
+
+if(side=="l")
+d.l++;
+
+else
+d.r++;
+
+localStorage.setItem(
+id,
+JSON.stringify(d)
+);
+
+localStorage.setItem(
+"v"+id,
+true
+);
+
+load(id);
+
+}
+
+function load(id){
+
+let d=
+JSON.parse(
+localStorage.getItem(id)
+)
+||
+{
+l:0,
+r:0
+};
+
+let total=
+d.l+d.r;
+
+let l=
+Math.round(
+d.l/total*100
+)||0;
+
+let r=
+Math.round(
+d.r/total*100
+)||0;
+
+document.getElementById(
+id+"g"
+).style.width=
+l+"%";
+
+document.getElementById(
+id+"r"
+).style.width=
+r+"%";
+
+document.getElementById(
+id+"t"
+).innerHTML=
+l+
+"% ⚔ "+
+r+
+"%";
+
+}
+
+
+</script>
+
+</body>
+</html>
